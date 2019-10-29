@@ -1,74 +1,78 @@
-import React, {Component} from 'react'
-import FormInput from '../formInput/formInputComponent'
+import React, { useState } from "react";
+import { connect } from "react-redux";
 
-import CustomButton from '../customButton/customButtomComponent'
+import FormInput from "../formInput/formInputComponent";
+import CustomButton from "../customButton/customButtomComponent";
+import {
+  googleSignInStart,
+  emailSignInStart
+} from "../../redux/user/userActions";
 
-import  {auth, signInWithGoogle } from '../../firebase/firebase.utils'
-import './signInStyles.scss'
+import "./signInStyles.scss";
 
+const SignIn = ({ emailSignInStart, googleSignInStart }) => {
+  const [userCredentials, setCredentials] = useState({
+    email: "",
+    password: ""
+  });
 
-class SignIn extends Component{
-    constructor(){
-        super()
+  const { email, password } = userCredentials;
 
-        this.state = {
-            email:'',
-            password:''
-        }
-    }
-    handleSubmit = async (event) =>{
-        event.preventDefault();
- 
-        const { email, password} = this.state;
+  const handleSubmit = async event => {
+    event.preventDefault();
 
-        try {
-            await auth.signInWithEmailAndPassword(email, password);
-            this.setState({email:'', password:''});
-            
-        } catch (error) {
-            console.error(error)
-        }
+    emailSignInStart(email, password);
+  };
+  const handleChange = event => {
+    const { value, name } = event.target;
 
-        
-    }
-    handleChange = (event) =>{
-        const { value, name } = event.target;
+    setCredentials({ ...userCredentials, [name]: value });
+  };
+  return (
+    <div className="sign-in">
+      <h1>I ALREADY HAVE AN ACCOUNT</h1>
+      <span>sign in with email and password</span>
 
-        this.setState({[name]:value})
+      <form onSubmit={handleSubmit}>
+        <FormInput
+          name="email"
+          type="email"
+          label="Email"
+          handleChange={handleChange}
+          value={email}
+          required
+        />
 
-    }
+        <FormInput
+          name="password"
+          type="password"
+          label="Password"
+          value={password}
+          handleChange={handleChange}
+          required
+        />
+        <div className="button">
+          <CustomButton type="submit">SIGN IN</CustomButton>
+          <CustomButton
+            type="button"
+            onClick={googleSignInStart}
+            isGoogleSignIn
+          >
+            Sign with google
+          </CustomButton>
+        </div>
+      </form>
+    </div>
+  );
+};
 
-    render(){
-        return (
-            <div className = 'sign-in'>
-                <h1>I ALREADY HAVE AN ACCOUNT</h1>
-                <span>sign in with email and password</span>
+const mapDispatchToProps = dispatch => ({
+  googleSignInStart: () => dispatch(googleSignInStart()),
+  emailSignInStart: (email, password) =>
+    dispatch(emailSignInStart({ email, password }))
+});
 
-                <form onSubmit = {this.handleSubmit}>
-
-                    <FormInput name = 'email'
-                    type ='email'
-                    label = 'Email'
-                    handleChange = {this.handleChange}
-                    value = {this.state.email}
-                    required />
-                    
-                    <FormInput name = 'password'
-                    type ='password'
-                    label = 'Password'
-                    value = {this.state.password}
-                    handleChange = {this.handleChange}
-                    required />
-                    <div className = 'button'>
-                        <CustomButton type = 'submit' >SIGN IN</CustomButton>
-                        <CustomButton onClick = {signInWithGoogle} isGoogleSignIn >Sign with google </CustomButton>
-                    </div>
-                    
-                </form>
-            </div>
-        )
-    }
-}
-
-
-export default SignIn;
+export default connect(
+  null,
+  mapDispatchToProps
+)(SignIn);
